@@ -1612,18 +1612,8 @@ static int vc4_dsi_bind(struct device *dev, struct device *master, void *data)
 
 	ret = drm_of_find_panel_or_bridge(dev->of_node, 0, 0,
 					  &panel, &dsi->bridge);
-	if (ret) {
-		/* If the bridge or panel pointed by dev->of_node is not
-		 * enabled, just return 0 here so that we don't prevent the DRM
-		 * dev from being registered. Of course that means the DSI
-		 * encoder won't be exposed, but that's not a problem since
-		 * nothing is connected to it.
-		 */
-		if (ret == -ENODEV)
-			return 0;
-
+	if (ret)
 		return ret;
-	}
 
 	if (panel) {
 		dsi->bridge = devm_drm_panel_bridge_add(dev, panel,
@@ -1660,18 +1650,7 @@ static int vc4_dsi_bind(struct device *dev, struct device *master, void *data)
 	 * from our driver, since we need to sequence them within the
 	 * encoder's enable/disable paths.
 	 */
-	dsi->encoder->bridge = NULL;
 
-	ret = drm_bridge_attach(dsi->encoder, dsi->bridge, NULL);
-	if (ret) {
-		dev_err(dev, "bridge attach failed: %d\n", ret);
-		return ret;
-	}
-	/* Disable the atomic helper calls into the bridge.  We
-	 * manually call the bridge pre_enable / enable / etc. calls
-	 * from our driver, since we need to sequence them within the
-	 * encoder's enable/disable paths.
-	 */
 	dsi->encoder->bridge = NULL;
 
 	pm_runtime_enable(dev);
