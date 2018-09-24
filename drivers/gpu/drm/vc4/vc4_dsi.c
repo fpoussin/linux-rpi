@@ -1662,6 +1662,18 @@ static int vc4_dsi_bind(struct device *dev, struct device *master, void *data)
 	 */
 	dsi->encoder->bridge = NULL;
 
+	ret = drm_bridge_attach(dsi->encoder, dsi->bridge, NULL);
+	if (ret) {
+		dev_err(dev, "bridge attach failed: %d\n", ret);
+		return ret;
+	}
+	/* Disable the atomic helper calls into the bridge.  We
+	 * manually call the bridge pre_enable / enable / etc. calls
+	 * from our driver, since we need to sequence them within the
+	 * encoder's enable/disable paths.
+	 */
+	dsi->encoder->bridge = NULL;
+
 	pm_runtime_enable(dev);
 
 	return 0;
